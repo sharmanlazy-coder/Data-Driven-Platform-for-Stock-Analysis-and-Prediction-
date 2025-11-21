@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="Screenshot 2025-11-21 161819" src="https://github.com/user-attachments/assets/8ce664d4-15ae-4edb-8593-2ebe4dd69802" /># 📈 Data-Driven Stock Analysis & Prediction Platform
+# 📈 Data-Driven Stock Analysis & Prediction Platform
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-lightgrey?style=for-the-badge&logo=flask&logoColor=white)
@@ -55,11 +55,13 @@ A powerful, full-stack web application designed to empower retail investors with
 
 ### 2. Stock Analysis & Prediction
 *Detailed view with AI forecasts, technical indicators, and CAPM data.*
-![Analysis Preview](https://via.placeholder.com/800x400?text=Stock+Analysis+Screenshot+Here)
+![Analysis Preview]<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/159c0f35-b958-4dab-a7a2-cd711ec5a89a" />
+
 
 ### 3. Virtual Trading Portfolio
 *Manage your demo trades and track your performance.*
-![Portfolio Preview](https://via.placeholder.com/800x400?text=Trading+Portfolio+Screenshot+Here)
+![Portfolio Preview]<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c4fbf819-3adc-43ae-b100-c15d541a2e79" />
+
 
 ---
 
