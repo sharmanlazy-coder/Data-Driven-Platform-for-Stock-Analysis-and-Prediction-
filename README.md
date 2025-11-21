@@ -64,7 +64,21 @@ A powerful, full-stack web application designed to empower retail investors with
 
 
 ---
+## 📂 Project Structure
 
+```text
+📦 Stock Analyze
+ ┣ 📂 modules                    # Core Logic
+ ┃ ┣ 📜 capm.py                  # Capital Asset Pricing Model calculations
+ ┃ ┣ 📜 predictions.py           # ML Models (XGBoost, Random Forest)
+ ┃ ┣ 📜 technical_indicators.py  # RSI, MACD, BBands logic
+ ┃ ┗ 📜 stock_data.py            # yfinance data fetching
+ ┣ 📂 static                     # CSS, JS, Images
+ ┣ 📂 templates                  # HTML files (Dashboard, Profile, etc.)
+ ┣ 📜 app.py                     # Main Flask Application
+ ┣ 📜 models.py                  # Database Models (User, Trade, Watchlist)
+ ┗ 📜 pyproject.toml             # Project Dependencies
+```
 ## ⚙️ Installation & Setup
 
 Follow these steps to run the project locally.
@@ -72,8 +86,29 @@ Follow these steps to run the project locally.
 ### Prerequisites
 * Python 3.8 or higher
 * Git
+  
+### For Windows : 
+ # 1. Download the code
+ git clone https://github.com/sharmanlazy-coder/Data-Driven-Platform-for-Stock-Analysis-and-Prediction-.git
+ 
+ ```cd Data-Driven-Platform-for-Stock-Analysis-and-Prediction-```
 
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/sharmanlazy-coder/Data-Driven-Platform-for-Stock-Analysis-and-Prediction-.git](https://github.com/sharmanlazy-coder/Data-Driven-Platform-for-Stock-Analysis-and-Prediction-.git)
-cd Data-Driven-Platform-for-Stock-Analysis-and-Prediction-
+ # 2. Setup and Run
+```
+ python -m venv venv
+ venv\Scripts\activate
+ pip install -r requirements.txt
+ python "final proj/Stock Analyze/app.py"
+```
+ ## For Mac :
+ # 1. Download the code
+ git clone https://github.com/sharmanlazy-coder/Data-Driven-Platform-for-Stock-Analysis-and-Prediction-.git
+ 
+``` cd Data-Driven-Platform-for-Stock-Analysis-and-Prediction-```
+
+ # 2. Setup and Run
+ ```
+ python3 -m venv venv
+ source venv/bin/activate
+ pip install -r requirements.txt
+ python "final proj/Stock Analyze/app.py" 
