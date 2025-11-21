@@ -1,4 +1,4 @@
-# 📈 Data-Driven Stock Analysis & Prediction Platform
+<img width="1920" height="1080" alt="Screenshot 2025-11-21 161819" src="https://github.com/user-attachments/assets/8ce664d4-15ae-4edb-8593-2ebe4dd69802" /># 📈 Data-Driven Stock Analysis & Prediction Platform
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-lightgrey?style=for-the-badge&logo=flask&logoColor=white)
@@ -49,7 +49,8 @@ A powerful, full-stack web application designed to empower retail investors with
 
 ### 1. Live Market Dashboard
 *Real-time overview of NIFTY 50, SENSEX, and top market movers.*
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Dashboard+Screenshot+Here) 
+![Dashboard Preview]<img width="1920" height="1080" alt="Screenshot 2025-11-21 161819" src="https://github.com/user-attachments/assets/ed8fd71f-ce60-483f-a7b5-50e854161f1d" />
+ 
 *(Replace this link with `image_d19509.png` or a screenshot of your dashboard)*
 
 ### 2. Stock Analysis & Prediction
