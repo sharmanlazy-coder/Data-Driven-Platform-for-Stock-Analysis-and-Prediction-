@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPO Listings - Stock Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .ipo-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .badge-upcoming {
+            background: var(--primary-color);
+        }
+
+        .badge-open {
+            background: var(--success-color);
+        }
+
+        .badge-closed {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="mb-4">
+            <h4><i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings</h4>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2><i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings</h2>
+            <p class="text-muted mb-0">Upcoming and current Initial Public Offerings</p>
+        </div>
+
+        <div class="ipo-card">
+            <h4 class="mb-4"><i class="fas fa-list me-2"></i>Current & Upcoming IPOs</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Price Band</th>
+                            <th>Lot Size</th>
+                            <th>Open Date</th>
+                            <th>Close Date</th>
+                            <th>Listing Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Tata Technologies</strong></td>
+                            <td>₹475 - ₹500</td>
+                            <td>30 shares</td>
+                            <td>Nov 22, 2025</td>
+                            <td>Nov 24, 2025</td>
+                            <td>Nov 30, 2025</td>
+                            <td><span class="badge badge-upcoming">Upcoming</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ideaforge Technology</strong></td>
+                            <td>₹640 - ₹672</td>
+                            <td>22 shares</td>
+                            <td>Nov 15, 2025</td>
+                            <td>Nov 17, 2025</td>
+                            <td>Nov 23, 2025</td>
+                            <td><span class="badge badge-open">Open</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>IREDA (Indian Renewable Energy)</strong></td>
+                            <td>₹30 - ₹32</td>
+                            <td>450 shares</td>
+                            <td>Nov 21, 2025</td>
+                            <td>Nov 23, 2025</td>
+                            <td>Nov 29, 2025</td>
+                            <td><span class="badge badge-open">Open</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Yatharth Hospital</strong></td>
+                            <td>₹270 - ₹290</td>
+                            <td>51 shares</td>
+                            <td>Oct 15, 2025</td>
+                            <td>Oct 17, 2025</td>
+                            <td>Oct 23, 2025</td>
+                            <td><span class="badge badge-closed">Closed</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fedbank Financial Services</strong></td>
+                            <td>₹120 - ₹133</td>
+                            <td>112 shares</td>
+                            <td>Nov 25, 2025</td>
+                            <td>Nov 27, 2025</td>
+                            <td>Dec 2, 2025</td>
+                            <td><span class="badge badge-upcoming">Upcoming</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Doms Industries</strong></td>
+                            <td>₹750 - ₹790</td>
+                            <td>19 shares</td>
+                            <td>Nov 10, 2025</td>
+                            <td>Nov 14, 2025</td>
+                            <td>Nov 20, 2025</td>
+                            <td><span class="badge badge-open">Open</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bharti Hexacom</strong></td>
+                            <td>₹550 - ₹570</td>
+                            <td>26 shares</td>
+                            <td>Dec 1, 2025</td>
+                            <td>Dec 3, 2025</td>
+                            <td>Dec 9, 2025</td>
+                            <td><span class="badge badge-upcoming">Upcoming</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Suraj Estate Developers</strong></td>
+                            <td>₹340 - ₹360</td>
+                            <td>41 shares</td>
+                            <td>Oct 20, 2025</td>
+                            <td>Oct 24, 2025</td>
+                            <td>Oct 30, 2025</td>
+                            <td><span class="badge badge-closed">Closed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="ipo-card">
+            <h5><i class="fas fa-info-circle me-2"></i>How to Apply for IPO</h5>
+            <ol>
+                <li>Check the IPO status and dates above</li>
+                <li>Login to your demat account or trading platform</li>
+                <li>Navigate to the IPO section</li>
+                <li>Select the IPO you want to apply for</li>
+                <li>Enter the number of lots and UPI ID for payment</li>
+                <li>Submit application and wait for allotment</li>
+            </ol>
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Note:</strong> IPO data shown here is for demonstration purposes. For live IPO data and applications, please use your broker's platform.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

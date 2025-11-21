@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Stock Market Prediction Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: #e2e8f0;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        body.dark-mode .sidebar {
+            background: #1e293b;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding: 30px;
+            padding-top: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .search-section {
+            max-width: 900px;
+            margin: 0 auto 40px;
+        }
+
+        .main-search-box {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .main-search-input {
+            width: 100%;
+            padding: 20px 60px 20px 25px;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .main-search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 6px 30px rgba(37, 99, 235, 0.15);
+        }
+
+        body.dark-mode .main-search-input {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            font-size: 1.3rem;
+        }
+
+        .search-results-main {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1001;
+            display: none;
+            margin-top: 10px;
+        }
+
+        body.dark-mode .search-results-main {
+            background: #1e293b;
+        }
+
+        .search-result-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: #f8fafc;
+            padding-left: 30px;
+        }
+
+        body.dark-mode .search-result-item {
+            border-bottom-color: #334155;
+        }
+
+        body.dark-mode .search-result-item:hover {
+            background: #334155;
+        }
+
+        .market-details-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .market-detail-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .market-detail-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .market-detail-card.clickable {
+            cursor: pointer;
+        }
+
+        .market-detail-card.clickable:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        body.dark-mode .market-detail-card {
+            background: #1e293b;
+        }
+
+        .market-detail-card.nifty {
+            border-left-color: #667eea;
+        }
+
+        .market-detail-card.sensex {
+            border-left-color: #f59e0b;
+        }
+
+        .market-detail-card.sentiment {
+            border-left-color: var(--success-color);
+        }
+
+        .market-detail-card.sentiment.bearish {
+            border-left-color: var(--danger-color);
+        }
+
+        .market-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .market-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        body.dark-mode .market-value {
+            color: #60a5fa;
+        }
+
+        .market-change {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .market-change.positive {
+            color: var(--success-color);
+        }
+
+        .market-change.negative {
+            color: var(--danger-color);
+        }
+
+        .sentiment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .sentiment-badge.bullish {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .sentiment-badge.bearish {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .top-movers-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode .top-movers-section {
+            background: #1e293b;
+        }
+
+        .cap-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        body.dark-mode .cap-selector {
+            background: #0f172a;
+        }
+
+        .cap-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cap-btn:hover {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+
+        .cap-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .movers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .movers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .movers-column h6 {
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        body.dark-mode .movers-column h6 {
+            border-bottom-color: #334155;
+        }
+
+        .movers-column.gainers h6 {
+            color: var(--success-color);
+        }
+
+        .movers-column.losers h6 {
+            color: var(--danger-color);
+        }
+
+        .mover-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        body.dark-mode .mover-row {
+            background: #0f172a;
+        }
+
+        .mover-row:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .mover-symbol {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+        }
+
+        body.dark-mode .mover-symbol {
+            color: #60a5fa;
+        }
+
+        .mover-price {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .mover-change {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .mover-change.positive {
+            color: var(--success-color);
+        }
+
+        .mover-change.negative {
+            color: var(--danger-color);
+        }
+
+        .stock-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stock-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        body.dark-mode .stock-card {
+            background: #1e293b;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        body.dark-mode .chart-container {
+            background: #1e293b;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode .header {
+            background: #1e293b;
+        }
+
+        .insight-card {
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        body.dark-mode .insight-card {
+            background: #334155;
+        }
+
+        .confidence-meter {
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.5s ease;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #475569;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .price-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .price-change.positive {
+            color: var(--success-color);
+        }
+
+        .price-change.negative {
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+            }
+            .main-content {
+                padding: 15px;
+                padding-top: 80px;
+            }
+            .market-details-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="fas fa-chart-line me-2"></i>Stock Dashboard</h4>
+            <span class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </span>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-user me-2"></i>Profile
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+
+        <div id="currentStock" class="mb-4" style="display:none;">
+            <h6 class="text-muted">Selected Stock</h6>
+            <div id="stockInfo"></div>
+            <button class="btn btn-sm btn-warning w-100 mt-2" onclick="addToWatchlist()">
+                <i class="fas fa-star me-2"></i>Add to Watchlist
+            </button>
+        </div>
+
+        <div class="mt-4">
+            <h6 class="text-muted mb-2">Market Overview</h6>
+            <div id="marketOverview" class="metric-card">
+                <small>NIFTY 50</small>
+                <div id="niftyValue" class="h5 mb-0">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1 class="mb-2">Indian Stock Market Dashboard</h1>
+            <p class="text-muted mb-0">Real-time data and AI-powered predictions</p>
+        </div>
+
+        <div class="search-section">
+            <div class="main-search-box">
+                <input type="text" id="mainStockSearch" class="main-search-input" placeholder="Search Indian stocks... (e.g., RELIANCE, TCS, INFY)">
+                <i class="fas fa-search search-icon"></i>
+                <div id="mainSearchResults" class="search-results-main"></div>
+            </div>
+        </div>
+
+        <div class="market-details-section">
+            <div class="market-detail-card nifty clickable" onclick="window.location.href='/index/nifty50'" title="Click to view NIFTY 50 prediction">
+                <div class="market-label"><i class="fas fa-chart-line me-2"></i>NIFTY 50</div>
+                <div class="market-value" id="niftyPrice">Loading...</div>
+                <div class="market-change" id="niftyChangeDisplay">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+
+            <div class="market-detail-card sensex clickable" onclick="window.location.href='/index/sensex'" title="Click to view SENSEX prediction">
+                <div class="market-label"><i class="fas fa-chart-bar me-2"></i>SENSEX</div>
+                <div class="market-value" id="sensexPrice">Loading...</div>
+                <div class="market-change" id="sensexChangeDisplay">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+
+            <div class="market-detail-card sentiment" id="sentimentCard">
+                <div class="market-label"><i class="fas fa-heart-pulse me-2"></i>Today's Market Trend</div>
+                <div id="marketSentiment">
+                    <span class="sentiment-badge bullish">
+                        <i class="fas fa-arrow-trend-up"></i>
+                        <span id="sentimentText">Loading...</span>
+                    </span>
+                </div>
+                <small class="text-muted" style="font-size: 0.75rem;">Based on intraday movement</small>
+            </div>
+        </div>
+
+        <div class="top-movers-section">
+            <h4 class="mb-4"><i class="fas fa-chart-line me-2"></i>Top Movers of the Day</h4>
+            
+            <div class="cap-selector">
+                <button class="cap-btn active" onclick="loadCapWiseMovers('large')">
+                    <i class="fas fa-building me-2"></i>Large-Cap
+                </button>
+                <button class="cap-btn" onclick="loadCapWiseMovers('mid')">
+                    <i class="fas fa-layer-group me-2"></i>Mid-Cap
+                </button>
+                <button class="cap-btn" onclick="loadCapWiseMovers('small')">
+                    <i class="fas fa-cube me-2"></i>Small-Cap
+                </button>
+            </div>
+
+            <div class="movers-grid" id="capWiseMovers">
+                <div class="movers-column gainers">
+                    <h6><i class="fas fa-arrow-trend-up me-2"></i>Top Gainers</h6>
+                    <div id="capGainers">Loading...</div>
+                </div>
+                <div class="movers-column losers">
+                    <h6><i class="fas fa-arrow-trend-down me-2"></i>Top Losers</h6>
+                    <div id="capLosers">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading data...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentSymbol = '';
+        let darkMode = false;
+
+        function toggleTheme() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = darkMode ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        document.getElementById('mainStockSearch').addEventListener('input', async (e) => {
+            const query = e.target.value;
+            if (query.length < 1) {
+                document.getElementById('mainSearchResults').style.display = 'none';
+                return;
+            }
+
+            const response = await fetch(`/api/search_stocks?query=${query}`);
+            const stocks = await response.json();
+            
+            const resultsDiv = document.getElementById('mainSearchResults');
+            resultsDiv.innerHTML = stocks.map(stock => 
+                `<div class="search-result-item" onclick="selectStock('${stock.symbol}')">
+                    <strong>${stock.symbol}</strong> - ${stock.name}
+                </div>`
+            ).join('');
+            resultsDiv.style.display = 'block';
+        });
+
+        async function selectStock(symbol) {
+            window.location.href = `/stock/${symbol}`;
+        }
+
+        async function loadMarketOverview() {
+            const response = await fetch('/api/market_overview');
+            const data = await response.json();
+            
+            if (!data.error) {
+                if (data.nifty) {
+                    const niftyChange = data.nifty.change;
+                    const niftyChangePercent = data.nifty.change_percent;
+                    const niftyClass = niftyChange >= 0 ? 'positive' : 'negative';
+                    const niftyIcon = niftyChange >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    
+                    document.getElementById('niftyPrice').textContent = `₹${data.nifty.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('niftyChangeDisplay').innerHTML = `
+                        <i class="fas ${niftyIcon}"></i>
+                        <span>₹${Math.abs(niftyChange).toFixed(2)} (${Math.abs(niftyChangePercent).toFixed(2)}%)</span>
+                    `;
+                    document.getElementById('niftyChangeDisplay').className = `market-change ${niftyClass}`;
+                    
+                    document.getElementById('niftyValue').innerHTML = `
+                        <div>${data.nifty.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        <small class="${niftyClass}">${niftyChange >= 0 ? '+' : ''}${niftyChange.toFixed(2)} (${niftyChangePercent.toFixed(2)}%)</small>
+                    `;
+                }
+
+                if (data.sensex) {
+                    const sensexChange = data.sensex.change;
+                    const sensexChangePercent = data.sensex.change_percent;
+                    const sensexClass = sensexChange >= 0 ? 'positive' : 'negative';
+                    const sensexIcon = sensexChange >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    
+                    document.getElementById('sensexPrice').textContent = `₹${data.sensex.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('sensexChangeDisplay').innerHTML = `
+                        <i class="fas ${sensexIcon}"></i>
+                        <span>₹${Math.abs(sensexChange).toFixed(2)} (${Math.abs(sensexChangePercent).toFixed(2)}%)</span>
+                    `;
+                    document.getElementById('sensexChangeDisplay').className = `market-change ${sensexClass}`;
+                }
+
+                const avgChange = data.nifty && data.sensex ? (data.nifty.change_percent + data.sensex.change_percent) / 2 : 0;
+                const sentiment = avgChange >= 0 ? 'Bullish' : 'Bearish';
+                const sentimentClass = avgChange >= 0 ? 'bullish' : 'bearish';
+                const sentimentIcon = avgChange >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+                
+                const sentimentTextEl = document.getElementById('sentimentText');
+                const marketSentimentEl = document.getElementById('marketSentiment');
+                const sentimentCardEl = document.getElementById('sentimentCard');
+                
+                if (sentimentTextEl) sentimentTextEl.textContent = sentiment;
+                if (marketSentimentEl) {
+                    marketSentimentEl.innerHTML = `
+                        <span class="sentiment-badge ${sentimentClass}">
+                            <i class="fas ${sentimentIcon}"></i>
+                            <span>${sentiment}</span>
+                        </span>
+                    `;
+                }
+                if (sentimentCardEl) sentimentCardEl.className = `market-detail-card sentiment ${sentimentClass}`;
+            }
+        }
+
+        let currentCap = 'large';
+
+        async function loadCapWiseMovers(capType) {
+            currentCap = capType;
+            
+            document.querySelectorAll('.cap-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const buttons = document.querySelectorAll('.cap-btn');
+            if (capType === 'large' && buttons[0]) buttons[0].classList.add('active');
+            else if (capType === 'mid' && buttons[1]) buttons[1].classList.add('active');
+            else if (capType === 'small' && buttons[2]) buttons[2].classList.add('active');
+            
+            try {
+                const response = await fetch(`/api/cap_wise_movers?cap=${capType}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('capGainers').innerHTML = '<p class="text-muted">Unable to load data</p>';
+                    document.getElementById('capLosers').innerHTML = '<p class="text-muted">Unable to load data</p>';
+                    return;
+                }
+                
+                const gainersHtml = data.gainers.map(stock => `
+                    <div class="mover-row" onclick="selectStock('${stock.symbol}.NS')">
+                        <div>
+                            <div class="mover-symbol">${stock.symbol}</div>
+                            <div class="mover-price">₹${stock.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div class="mover-change positive">
+                            <i class="fas fa-arrow-up"></i> ${stock.change_percent.toFixed(2)}%
+                        </div>
+                    </div>
+                `).join('');
+                
+                const losersHtml = data.losers.map(stock => `
+                    <div class="mover-row" onclick="selectStock('${stock.symbol}.NS')">
+                        <div>
+                            <div class="mover-symbol">${stock.symbol}</div>
+                            <div class="mover-price">₹${stock.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div class="mover-change negative">
+                            <i class="fas fa-arrow-down"></i> ${Math.abs(stock.change_percent).toFixed(2)}%
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('capGainers').innerHTML = gainersHtml || '<p class="text-muted">No gainers available</p>';
+                document.getElementById('capLosers').innerHTML = losersHtml || '<p class="text-muted">No losers available</p>';
+            } catch (error) {
+                console.error('Error loading cap-wise movers:', error);
+                document.getElementById('capGainers').innerHTML = '<p class="text-muted">Error loading data</p>';
+                document.getElementById('capLosers').innerHTML = '<p class="text-muted">Error loading data</p>';
+            }
+        }
+
+        async function addToWatchlist() {
+            if (!currentSymbol) {
+                alert('Please select a stock first');
+                return;
+            }
+
+            const response = await fetch('/api/watchlist', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({symbol: currentSymbol})
+            });
+            
+            const data = await response.json();
+            alert(data.message || data.error);
+        }
+
+        let autoRefreshIntervals = [];
+
+        function startAutoRefresh() {
+            clearAutoRefresh();
+            
+            if (currentSymbol) {
+                autoRefreshIntervals.push(setInterval(() => {
+                    if (currentSymbol) selectStock(currentSymbol);
+                }, 15000));
+                
+                autoRefreshIntervals.push(setInterval(() => {
+                    if (currentSymbol) loadHistoricalData(currentSymbol);
+                }, 30000));
+                
+                autoRefreshIntervals.push(setInterval(() => {
+                    if (currentSymbol) loadTechnicalIndicators(currentSymbol);
+                }, 30000));
+                
+                autoRefreshIntervals.push(setInterval(() => {
+                    if (currentSymbol) loadCAPMAnalysis(currentSymbol);
+                }, 60000));
+                
+                autoRefreshIntervals.push(setInterval(() => {
+                    if (currentSymbol) loadAIInsights(currentSymbol);
+                }, 60000));
+            }
+        }
+
+        function clearAutoRefresh() {
+            autoRefreshIntervals.forEach(interval => clearInterval(interval));
+            autoRefreshIntervals = [];
+        }
+
+        const originalSelectStock = selectStock;
+        selectStock = async function(symbol) {
+            await originalSelectStock(symbol);
+            startAutoRefresh();
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        async function loadMarketOverview() {
+            try {
+                const response = await fetch('/api/market_overview');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error loading market overview:', data.error);
+                    return;
+                }
+
+                // Update NIFTY 50
+                if (data.nifty) {
+                    const niftyChange = data.nifty.change >= 0 ? 'positive' : 'negative';
+                    const niftyIcon = data.nifty.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    
+                    // Update the sidebar value
+                    document.getElementById('niftyValue').innerHTML = `${data.nifty.price.toLocaleString('en-IN')}`;
+                    
+                    // Update the main display
+                    document.getElementById('niftyPrice').innerHTML = data.nifty.price.toLocaleString('en-IN');
+                    document.getElementById('niftyChangeDisplay').innerHTML = `
+                        <i class="fas ${niftyIcon}"></i>
+                        <span>${Math.abs(data.nifty.change).toFixed(2)} (${Math.abs(data.nifty.change_percent).toFixed(2)}%)</span>
+                    `;
+                    document.getElementById('niftyChangeDisplay').className = `market-change ${niftyChange}`;
+                }
+
+                // Update SENSEX
+                if (data.sensex) {
+                    const sensexChange = data.sensex.change >= 0 ? 'positive' : 'negative';
+                    const sensexIcon = data.sensex.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    
+                    // Update the main display
+                    document.getElementById('sensexPrice').innerHTML = data.sensex.price.toLocaleString('en-IN');
+                    document.getElementById('sensexChangeDisplay').innerHTML = `
+                        <i class="fas ${sensexIcon}"></i>
+                        <span>${Math.abs(data.sensex.change).toFixed(2)} (${Math.abs(data.sensex.change_percent).toFixed(2)}%)</span>
+                    `;
+                    document.getElementById('sensexChangeDisplay').className = `market-change ${sensexChange}`;
+                }
+
+                // Update market sentiment
+                const overallSentiment = (data.nifty && data.nifty.change >= 0) ? 'Bullish' : 'Bearish';
+                document.getElementById('sentimentText').textContent = overallSentiment;
+                const sentimentBadge = document.querySelector('.sentiment-badge');
+                sentimentBadge.className = `sentiment-badge ${overallSentiment.toLowerCase()}`;
+                sentimentBadge.innerHTML = `
+                    <i class="fas ${overallSentiment === 'Bullish' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
+                    <span>${overallSentiment}</span>
+                `;
+            } catch (error) {
+                console.error('Error in loadMarketOverview:', error);
+            }
+        }
+
+        // Initial loads
+        loadMarketOverview();
+        loadCapWiseMovers('large');
+        
+        // Set up auto-refresh
+        setInterval(loadMarketOverview, 30000);  // Update every 30 seconds
+        setInterval(() => loadCapWiseMovers(currentCap), 45000);
+    </script>
+</body>
+</html>

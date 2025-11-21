@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Stock Comparison - Stock Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .compare-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stock-column {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .comparison-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .better {
+            background: #d1fae5 !important;
+            font-weight: 600;
+        }
+
+        .value-up {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .value-down {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="mb-4">
+            <h4><i class="fas fa-exchange-alt me-2"></i>Compare Stocks</h4>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2><i class="fas fa-exchange-alt me-2"></i>Stock Comparison</h2>
+            <p class="text-muted mb-0">Compare two stocks side-by-side</p>
+        </div>
+
+                <div class="compare-card">
+            <h4 class="mb-4"><i class="fas fa-search me-2"></i>Select Stocks to Compare</h4>
+            <div class="selected-stocks mb-3">
+                <!-- Selected stocks will appear here -->
+            </div>
+            <div class="search-box mb-3">
+                <label class="form-label">Search and Add Stocks</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="stockSearch" placeholder="Type to search stocks..." autocomplete="off">
+                    <button class="btn btn-outline-primary" type="button" onclick="addCurrentStock()">
+                        <i class="fas fa-plus me-1"></i>Add
+                    </button>
+                </div>
+                <div class="search-results" style="display: none;"></div>
+            </div>
+            <button class="btn btn-primary w-100" onclick="compareStocks()" id="compareButton" disabled>
+                <i class="fas fa-balance-scale me-2"></i>Compare Stocks
+            </button>
+        </div>
+
+        <style>
+            .search-results {
+                position: absolute;
+                z-index: 1000;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                max-height: 300px;
+                overflow-y: auto;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            
+            .search-result-item {
+                padding: 10px 15px;
+                cursor: pointer;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .search-result-item:hover {
+                background: #f8fafc;
+            }
+
+            .selected-stock-tag {
+                display: inline-block;
+                background: #edf2f7;
+                padding: 6px 12px;
+                border-radius: 20px;
+                margin: 0 8px 8px 0;
+                font-size: 0.9rem;
+            }
+
+            .selected-stock-tag .remove-stock {
+                margin-left: 8px;
+                color: #e53e3e;
+                cursor: pointer;
+            }
+
+            .search-box {
+                position: relative;
+            }
+
+            .stock-name {
+                font-weight: 600;
+            }
+
+            .stock-symbol {
+                color: #718096;
+                font-size: 0.9em;
+            }
+        </style>
+
+        <div id="comparisonResults" style="display:none;">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="stock-column" id="stock1Header">
+                        <h3 id="stock1Name">-</h3>
+                        <p class="mb-0" id="stock1Symbol">-</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stock-column" id="stock2Header">
+                        <h3 id="stock2Name">-</h3>
+                        <p class="mb-0" id="stock2Symbol">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="compare-card">
+                <table class="table comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Stock 1</th>
+                            <th>Stock 2</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedStocks = new Set();
+        let searchTimeout;
+        let searchResults = [];
+        let selectedSearchResult = null;
+
+        document.getElementById('stockSearch').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length > 0) {
+                searchTimeout = setTimeout(() => searchStocks(query), 300);
+            } else {
+                document.querySelector('.search-results').style.display = 'none';
+            }
+        });
+
+        document.getElementById('stockSearch').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && selectedSearchResult) {
+                addStock(selectedSearchResult);
+            }
+        });
+
+        async function searchStocks(query) {
+            try {
+                const response = await fetch(`/api/search_stocks?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                searchResults = data;
+                
+                const resultsDiv = document.querySelector('.search-results');
+                resultsDiv.innerHTML = '';
+                
+                if (data.length > 0) {
+                    data.forEach((stock, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result-item';
+                        div.innerHTML = `
+                            <span class="stock-name">${stock.name}</span>
+                            <span class="stock-symbol">${stock.symbol}</span>
+                        `;
+                        div.onclick = () => addStock(stock);
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.style.display = 'block';
+                    selectedSearchResult = data[0];
+                } else {
+                    resultsDiv.style.display = 'none';
+                    selectedSearchResult = null;
+                }
+            } catch (error) {
+                console.error('Error searching stocks:', error);
+            }
+        }
+
+        function addCurrentStock() {
+            if (selectedSearchResult) {
+                addStock(selectedSearchResult);
+            }
+        }
+
+        function addStock(stock) {
+            if (selectedStocks.size >= 5) {
+                alert('You can compare up to 5 stocks at a time');
+                return;
+            }
+
+            if (!selectedStocks.has(stock.symbol)) {
+                selectedStocks.add(stock.symbol);
+                updateSelectedStocksDisplay();
+                document.getElementById('stockSearch').value = '';
+                document.querySelector('.search-results').style.display = 'none';
+                document.getElementById('compareButton').disabled = selectedStocks.size < 2;
+            }
+        }
+
+        function removeStock(symbol) {
+            selectedStocks.delete(symbol);
+            updateSelectedStocksDisplay();
+            document.getElementById('compareButton').disabled = selectedStocks.size < 2;
+        }
+
+        function updateSelectedStocksDisplay() {
+            const container = document.querySelector('.selected-stocks');
+            container.innerHTML = '';
+            
+            selectedStocks.forEach(symbol => {
+                const tag = document.createElement('span');
+                tag.className = 'selected-stock-tag';
+                tag.innerHTML = `
+                    ${symbol}
+                    <span class="remove-stock" onclick="removeStock('${symbol}')">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                container.appendChild(tag);
+            });
+        }
+
+        function formatValue(value, format) {
+            if (value === 'N/A' || value === null || value === undefined) return 'N/A';
+            if (typeof value === 'number') {
+                if (format === '₹') {
+                    if (value >= 10000000) { // Convert to Cr for values >= 1Cr
+                        return `₹${(value / 10000000).toFixed(2)} Cr`;
+                    } else if (value >= 100000) { // Convert to Lakhs for values >= 1L
+                        return `₹${(value / 100000).toFixed(2)} L`;
+                    } else {
+                        return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+                } else if (format === '%') {
+                    return `${value.toFixed(2)}%`;
+                } else if (format === 'volume') {
+                    if (value >= 10000000) {
+                        return `${(value / 10000000).toFixed(2)} Cr`;
+                    } else if (value >= 100000) {
+                        return `${(value / 100000).toFixed(2)} L`;
+                    } else {
+                        return value.toLocaleString('en-IN');
+                    }
+                }
+            }
+            return value.toString();
+        }
+
+        async function compareStocks() {
+            try {
+                if (selectedStocks.size < 2) {
+                    alert('Please select at least 2 stocks to compare');
+                    return;
+                }
+
+                // Show loading state
+                document.getElementById('comparisonResults').style.display = 'none';
+                const compareButton = document.getElementById('compareButton');
+                compareButton.disabled = true;
+                compareButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Comparing...';
+
+                // Send symbols to backend for comparison
+                const response = await fetch('/api/compare-stocks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbols: Array.from(selectedStocks)
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                const stocksData = data.stocks;
+
+                // Update the comparison results layout for multiple stocks
+                const resultsDiv = document.getElementById('comparisonResults');
+                resultsDiv.innerHTML = `
+                    <div class="row mb-3" id="stockHeaders">
+                        ${Array.from(selectedStocks).map((symbol, index) => `
+                            <div class="col">
+                                <div class="stock-column">
+                                    <h3>${stocksData[symbol].name || symbol}</h3>
+                                    <p class="mb-0">${symbol}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="compare-card">
+                        <table class="table comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    ${Array.from(selectedStocks).map(() => '<th>Value</th>').join('')}
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                const metrics = [
+                    { label: 'Current Price', key: 'current_price', format: '₹', higher_better: false },
+                    { label: 'Change', key: 'change', format: '₹', higher_better: true },
+                    { label: 'Change %', key: 'change_percent', format: '%', higher_better: true },
+                    { label: 'Day High', key: 'high', format: '₹', higher_better: true },
+                    { label: 'Day Low', key: 'low', format: '₹', higher_better: false },
+                    { label: 'Volume', key: 'volume', format: 'volume', higher_better: true },
+                    { label: 'Market Cap', key: 'market_cap', format: '₹', higher_better: true },
+                    { label: '52 Week High', key: '52_week_high', format: '₹', higher_better: true },
+                    { label: '52 Week Low', key: '52_week_low', format: '₹', higher_better: false },
+                    { label: 'P/E Ratio', key: 'pe_ratio', format: '', higher_better: false }
+                ];
+
+                const tableBody = document.getElementById('comparisonTableBody');
+                metrics.forEach(metric => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${metric.label}</td>`;
+
+                    // Get all values for this metric
+                    const values = Array.from(selectedStocks).map(symbol => ({
+                        symbol,
+                        value: stocksData[symbol][metric.key]
+                    }));
+
+                    // Find best/worst values for highlighting
+                    const validValues = values.filter(v => 
+                        v.value !== null && v.value !== 'N/A' && !isNaN(parseFloat(v.value))
+                    );
+                    
+                    if (validValues.length > 0) {
+                        const numericValues = validValues.map(v => parseFloat(v.value));
+                        const bestValue = metric.higher_better ? Math.max(...numericValues) : Math.min(...numericValues);
+
+                        values.forEach(({symbol, value}) => {
+                            let classes = [];
+                            
+                            if (value !== null && value !== 'N/A' && !isNaN(parseFloat(value))) {
+                                // Highlight the best value
+                                if (parseFloat(value) === bestValue) {
+                                    classes.push('better');
+                                }
+
+                                // Add up/down classes for change values
+                                if (metric.key === 'change' || metric.key === 'change_percent') {
+                                    if (parseFloat(value) > 0) classes.push('value-up');
+                                    if (parseFloat(value) < 0) classes.push('value-down');
+                                }
+                            }
+
+                            row.innerHTML += `<td class="${classes.join(' ')}">${formatValue(value, metric.format)}</td>`;
+                        });
+                    } else {
+                        values.forEach(({value}) => {
+                            row.innerHTML += `<td>${formatValue(value, metric.format)}</td>`;
+                        });
+                    }
+
+                    tableBody.appendChild(row);
+                });
+
+                // Show the results
+                resultsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error comparing stocks:', error);
+                alert('Error comparing stocks. Please try again.');
+            } finally {
+                // Reset button state
+                const compareButton = document.getElementById('compareButton');
+                compareButton.disabled = false;
+                compareButton.innerHTML = '<i class="fas fa-balance-scale me-2"></i>Compare Stocks';
+            }
+        }
+    </script>
+</body>
+</html>

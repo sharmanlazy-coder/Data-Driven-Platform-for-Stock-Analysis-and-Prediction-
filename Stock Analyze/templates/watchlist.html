@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist - Stock Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+            padding-top: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stock-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .price-change.positive {
+            color: var(--success-color);
+        }
+
+        .price-change.negative {
+            color: var(--danger-color);
+        }
+
+        .btn-remove {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar">
+        <div class="mb-4">
+            <h4><i class="fas fa-star me-2"></i>My Watchlist</h4>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-user me-2"></i>Profile
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2><i class="fas fa-star me-2"></i>My Watchlist</h2>
+            <p class="text-muted mb-0">Track your favorite stocks with live prices</p>
+        </div>
+
+        {% if watchlist|length == 0 %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Your watchlist is empty. Go to the dashboard and add stocks by clicking the star icon!
+            </div>
+        {% else %}
+            <div class="row">
+                {% for stock in watchlist %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="stock-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="mb-0">{{ stock.symbol }}</h5>
+                                    <small class="text-muted">{{ stock.name }}</small>
+                                </div>
+                                <button class="btn btn-sm btn-remove" onclick="removeFromWatchlist('{{ stock.symbol }}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="price-display mb-2">
+                                <h3 class="mb-0">₹{{ "%.2f"|format(stock.price) }}</h3>
+                            </div>
+                            <div class="price-change {{ 'positive' if stock.change >= 0 else 'negative' }}">
+                                <i class="fas fa-{{ 'arrow-up' if stock.change >= 0 else 'arrow-down' }} me-1"></i>
+                                {{ "%.2f"|format(stock.change) }} ({{ "%.2f"|format(stock.change_percent) }}%)
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('dashboard') }}?symbol={{ stock.symbol }}" class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-chart-line me-2"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadWatchlistLive() {
+            try {
+                const response = await fetch('/api/watchlist');
+                const stocks = await response.json();
+                
+                if (stocks.error) return;
+                
+                const container = document.querySelector('.row.g-4');
+                if (!container) return;
+                
+                container.innerHTML = stocks.map(stock => `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="watchlist-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="mb-1">${stock.symbol}</h5>
+                                    <small class="text-muted">${stock.name}</small>
+                                </div>
+                                <button class="btn btn-sm btn-remove" onclick="removeFromWatchlist('${stock.symbol}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="price-display mb-2">
+                                <h3 class="mb-0">₹${stock.price.toFixed(2)}</h3>
+                            </div>
+                            <div class="price-change ${stock.change >= 0 ? 'positive' : 'negative'}">
+                                <i class="fas fa-${stock.change >= 0 ? 'arrow-up' : 'arrow-down'} me-1"></i>
+                                ${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)
+                            </div>
+                            <div class="mt-3">
+                                <a href="/dashboard?symbol=${stock.symbol}" class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-chart-line me-2"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                const emptyMessage = document.querySelector('.alert-info');
+                if (stocks.length === 0 && !emptyMessage) {
+                    container.innerHTML = '<div class="col-12"><div class="alert alert-info">No stocks in watchlist. Go to Dashboard to add stocks.</div></div>';
+                } else if (stocks.length > 0 && emptyMessage) {
+                    emptyMessage.remove();
+                }
+            } catch (error) {
+                console.error('Error loading watchlist:', error);
+            }
+        }
+
+        async function removeFromWatchlist(symbol) {
+            if (!confirm(`Remove ${symbol} from watchlist?`)) return;
+
+            const response = await fetch('/api/watchlist', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({symbol: symbol})
+            });
+            
+            const data = await response.json();
+            
+            if (!data.error) {
+                loadWatchlistLive();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        setInterval(loadWatchlistLive, 10000);
+    </script>
+</body>
+</html>

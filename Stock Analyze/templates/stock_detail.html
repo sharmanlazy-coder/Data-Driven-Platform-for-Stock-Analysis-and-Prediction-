@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Stock Analysis - {{ symbol }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding: 30px;
+            padding-top: 90px;
+            max-width: 100%;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stock-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .price-change {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .positive {
+            color: var(--success-color);
+        }
+
+        .negative {
+            color: var(--danger-color);
+        }
+
+        .full-width-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .live-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar">
+        <div class="mb-4">
+            <h4><i class="fas fa-chart-line me-2"></i>Navigation</h4>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-user me-2"></i>Profile
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="mb-3">
+            <a href="{{ url_for('dashboard') }}" class="back-button">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <div class="header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 id="stockName">{{ symbol }}</h1>
+                    <p class="text-muted mb-0">Live Analysis & Predictions</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div id="stockPrice"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Live Price Chart with Predictions (FULL WIDTH) -->
+        <div class="full-width-section">
+            <h5 class="section-title">
+                <i class="fas fa-chart-area me-2"></i>Live Price Chart with Predictions
+                <span class="live-badge">LIVE</span>
+            </h5>
+            <div id="priceChart" style="min-height: 450px;"></div>
+        </div>
+
+        <!-- 2. AI Insights (FULL WIDTH) -->
+        <div class="full-width-section">
+            <h5 class="section-title"><i class="fas fa-brain me-2"></i>AI Insights & Predictions</h5>
+            <div id="aiInsights"></div>
+        </div>
+
+        <!-- 3. Stock Details (FULL WIDTH) -->
+        <div class="full-width-section">
+            <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Stock Details</h5>
+            <div id="stockDetails"></div>
+            <div class="mt-3">
+                <button onclick="addToWatchlist()" class="btn btn-primary">
+                    <i class="fas fa-star me-2"></i>Add to Watchlist
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. Technical Indicators (FULL WIDTH) -->
+        <div class="full-width-section">
+            <h5 class="section-title"><i class="fas fa-chart-candlestick me-2"></i>Candlestick Chart with Technical Indicators</h5>
+            <div id="candlestickChart" style="min-height: 450px;"></div>
+        </div>
+
+        <div class="chart-grid">
+            <div class="full-width-section">
+                <h5 class="section-title"><i class="fas fa-wave-square me-2"></i>RSI Indicator</h5>
+                <div id="rsiChart" style="min-height: 300px;"></div>
+            </div>
+
+            <div class="full-width-section">
+                <h5 class="section-title"><i class="fas fa-chart-line me-2"></i>MACD Indicator</h5>
+                <div id="macdChart" style="min-height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- 5. CAPM Analysis (FULL WIDTH) -->
+        <div class="full-width-section">
+            <h5 class="section-title"><i class="fas fa-calculator me-2"></i>CAPM Analysis</h5>
+            <div id="capmAnalysis"></div>
+        </div>
+
+        <div class="full-width-section">
+            <h5 class="section-title"><i class="fas fa-chart-scatter me-2"></i>Security Market Line (SML)</h5>
+            <div id="smlChart" style="min-height: 400px;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const currentSymbol = '{{ symbol }}';
+    </script>
+    <script src="/static/js/stockDetails.js?v=20251029"></script>
+</body>
+</html>

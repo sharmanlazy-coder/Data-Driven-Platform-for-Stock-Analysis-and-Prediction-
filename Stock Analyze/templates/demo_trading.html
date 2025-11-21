@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Trading - Stock Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+            padding-top: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .portfolio-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .profit {
+            color: var(--success-color);
+        }
+
+        .loss {
+            color: var(--danger-color);
+        }
+
+        .trade-form {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar">
+        <div class="mb-4">
+            <h4><i class="fas fa-chart-bar me-2"></i>Demo Trading</h4>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('view_watchlist') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-star me-2"></i>Watchlist
+            </a>
+            <a href="{{ url_for('demo_trading') }}" class="btn btn-primary w-100 mb-2">
+                <i class="fas fa-chart-bar me-2"></i>Demo Trading
+            </a>
+            <a href="{{ url_for('ipo_listing') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>IPO Listings
+            </a>
+            <a href="{{ url_for('stock_comparison') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-exchange-alt me-2"></i>Compare Stocks
+            </a>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fas fa-user me-2"></i>Profile
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mb-2">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2><i class="fas fa-chart-bar me-2"></i>Demo Trading</h2>
+            <p class="text-muted mb-0">Practice trading with virtual money</p>
+        </div>
+
+        <div class="balance-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small>Available Balance</small>
+                    <h2 class="mb-0">₹{{ "%.2f"|format(balance) }}</h2>
+                </div>
+                <i class="fas fa-wallet fa-3x opacity-50"></i>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="trade-form">
+                    <h4 class="mb-3"><i class="fas fa-exchange-alt me-2"></i>Place Order</h4>
+                    <form id="tradeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Stock Symbol</label>
+                            <div style="position: relative;">
+                                <input type="text" class="form-control" id="symbol" placeholder="Search stocks (e.g., RELIANCE, TCS)" required autocomplete="off">
+                                <div id="symbolSearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; z-index: 1000; display: none;"></div>
+                            </div>
+                            <small class="text-muted">Note: Symbols will be auto-completed with .NS suffix</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trade Type</label>
+                            <select class="form-select" id="tradeType" required>
+                                <option value="BUY">BUY</option>
+                                <option value="SELL">SELL</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stop Loss (₹) <small class="text-muted">(Optional)</small></label>
+                            <input type="number" class="form-control" id="stoploss" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target Price (₹) <small class="text-muted">(Optional)</small></label>
+                            <input type="number" class="form-control" id="target" step="0.01">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-check me-2"></i>Execute Trade
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="portfolio-card">
+                    <h4 class="mb-3"><i class="fas fa-briefcase me-2"></i>Portfolio</h4>
+                    {% if portfolio|length == 0 %}
+                        <p class="text-muted">No open positions</p>
+                    {% else %}
+                        {% for symbol, data in portfolio.items() %}
+                            {% if data.quantity > 0 %}
+                                <div class="mb-3 p-3" style="background: #f8fafc; border-radius: 8px;">
+                                    <div class="d-flex justify-content-between">
+                                        <h6>{{ symbol }}</h6>
+                                        <span class="{{ 'profit' if data.profit_loss >= 0 else 'loss' }}">
+                                            {{ "%.2f"|format(data.profit_loss_percent) }}%
+                                        </span>
+                                    </div>
+                                    <div class="small text-muted">Qty: {{ data.quantity }}</div>
+                                    <div class="small">Invested: ₹{{ "%.2f"|format(data.total_invested) }}</div>
+                                    <div class="small">Current: ₹{{ "%.2f"|format(data.current_value) }}</div>
+                                    <div class="small {{ 'profit' if data.profit_loss >= 0 else 'loss' }}">
+                                        P&L: ₹{{ "%.2f"|format(data.profit_loss) }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="portfolio-card">
+            <h4 class="mb-3"><i class="fas fa-history me-2"></i>Open Positions</h4>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Stop Loss</th>
+                            <th>Target</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if open_trades|length == 0 %}
+                            <tr><td colspan="8" class="text-center text-muted">No open positions</td></tr>
+                        {% else %}
+                            {% for trade in open_trades %}
+                                <tr>
+                                    <td>{{ trade.symbol }}</td>
+                                    <td><span class="badge bg-{{ 'success' if trade.trade_type == 'BUY' else 'danger' }}">{{ trade.trade_type }}</span></td>
+                                    <td>{{ trade.quantity }}</td>
+                                    <td>₹{{ "%.2f"|format(trade.price) }}</td>
+                                    <td>₹{{ "%.2f"|format(trade.total_value) }}</td>
+                                    <td>{{ "₹%.2f"|format(trade.stoploss) if trade.stoploss else '-' }}</td>
+                                    <td>{{ "₹%.2f"|format(trade.target) if trade.target else '-' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="closeTrade({{ trade.id }})">
+                                            <i class="fas fa-times me-1"></i>Close
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="portfolio-card mt-3">
+            <h4 class="mb-3"><i class="fas fa-check-circle me-2"></i>Closed Trades</h4>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>Entry Price</th>
+                            <th>Total</th>
+                            <th>P&L</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if closed_trades|length == 0 %}
+                            <tr><td colspan="7" class="text-center text-muted">No closed trades</td></tr>
+                        {% else %}
+                            {% for trade in closed_trades %}
+                                <tr>
+                                    <td>{{ trade.symbol }}</td>
+                                    <td><span class="badge bg-{{ 'success' if trade.trade_type == 'BUY' else 'danger' }}">{{ trade.trade_type }}</span></td>
+                                    <td>{{ trade.quantity }}</td>
+                                    <td>₹{{ "%.2f"|format(trade.price) }}</td>
+                                    <td>₹{{ "%.2f"|format(trade.total_value) }}</td>
+                                    <td class="{{ 'profit' if trade.profit_loss >= 0 else 'loss' }}">
+                                        ₹{{ "%.2f"|format(trade.profit_loss) }}
+                                    </td>
+                                    <td>{{ trade.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let liveStockPrices = {};
+        let selectedSymbol = '';
+
+        document.getElementById('symbol').addEventListener('input', async (e) => {
+            const query = e.target.value.toUpperCase();
+            const resultsDiv = document.getElementById('symbolSearchResults');
+            
+            if (query.length < 1) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search_stocks?query=${query}`);
+                const stocks = await response.json();
+                
+                resultsDiv.innerHTML = stocks.map(stock => 
+                    `<div style="padding: 10px 15px; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" onclick="selectSymbol('${stock.symbol}')">
+                        <strong>${stock.symbol}</strong> - ${stock.name}
+                    </div>`
+                ).join('');
+                resultsDiv.style.display = stocks.length > 0 ? 'block' : 'none';
+            } catch (error) {
+                console.error('Error searching stocks:', error);
+            }
+        });
+
+        function selectSymbol(symbol) {
+            selectedSymbol = symbol;
+            document.getElementById('symbol').value = symbol;
+            document.getElementById('symbolSearchResults').style.display = 'none';
+            updateLiveStockPrice(symbol);
+        }
+
+        async function updateLiveStockPrice(symbol) {
+            if (!symbol) return;
+            
+            try {
+                const response = await fetch(`/api/stock_data/${symbol}`);
+                const data = await response.json();
+                
+                if (!data.error) {
+                    liveStockPrices[symbol] = data.current_price;
+                }
+            } catch (error) {
+                console.error('Error fetching stock price:', error);
+            }
+        }
+
+        document.getElementById('tradeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let symbol = document.getElementById('symbol').value.toUpperCase().trim();
+            
+            if (!symbol.endsWith('.NS')) {
+                symbol = symbol + '.NS';
+            }
+            
+            const formData = {
+                symbol: symbol,
+                trade_type: document.getElementById('tradeType').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                stoploss: document.getElementById('stoploss').value ? parseFloat(document.getElementById('stoploss').value) : null,
+                target: document.getElementById('target').value ? parseFloat(document.getElementById('target').value) : null
+            };
+
+            const response = await fetch('/api/demo-trade', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                alert(data.message + '\nNew Balance: ₹' + data.balance.toFixed(2));
+                location.reload();
+            }
+        });
+
+        async function closeTrade(tradeId) {
+            if (!confirm('Close this position?')) return;
+
+            const response = await fetch(`/api/close-trade/${tradeId}`, {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                alert(`Trade closed!\nP&L: ₹${data.profit_loss.toFixed(2)}\nNew Balance: ₹${data.balance.toFixed(2)}`);
+                location.reload();
+            }
+        }
+
+        async function refreshPortfolio() {
+            try {
+                const openTradesTable = document.querySelector('table tbody');
+                if (!openTradesTable) return;
+                
+                const openTrades = Array.from(openTradesTable.querySelectorAll('tr')).filter(tr => {
+                    return tr.querySelector('button[onclick*="closeTrade"]');
+                });
+                
+                for (const tradeRow of openTrades) {
+                    const symbol = tradeRow.cells[0].textContent.trim();
+                    await updateLiveStockPrice(symbol);
+                }
+            } catch (error) {
+                console.error('Error refreshing portfolio:', error);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        setInterval(refreshPortfolio, 15000);
+        refreshPortfolio();
+    </script>
+</body>
+</html>
