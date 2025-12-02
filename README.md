@@ -51,8 +51,6 @@ A powerful, full-stack web application designed to empower retail investors with
 *Real-time overview of NIFTY 50, SENSEX, and top market movers.*
 ![Dashboard Preview]<img width="1920" height="1080" alt="Screenshot 2025-11-21 161819" src="https://github.com/user-attachments/assets/ed8fd71f-ce60-483f-a7b5-50e854161f1d" />
  
-*(Replace this link with `image_d19509.png` or a screenshot of your dashboard)*
-
 ### 2. Stock Analysis & Prediction
 *Detailed view with AI forecasts, technical indicators, and CAPM data.*
 ![Analysis Preview]<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/159c0f35-b958-4dab-a7a2-cd711ec5a89a" />
